@@ -1,0 +1,37 @@
+# UK branch deck: same mechanism as config/tables.yaml. The UK figures are the 'UK branch' rows of the netting ladder and
+# the UK blocks of the IBNR 'Overview' sheet (occurrence 2 = the block further right, headed 'UK Branch').
+
+sources:
+  netting: {sheet: Ladder}
+  ibnr: {sheet: Overview}
+
+targets:
+  - {id: gvn_ENTOT, kind: ladder, slide: "Energy (ENTOT) - Gross vs Net summary - MBE",                 match: [gross, net before],
+     select: {lob: ENTOT, level: Aggregate, basis: MBE, branch: UK branch}}
+  - {id: gvn_PRTOT, kind: ladder, slide: "Property (PRTOT) - Gross vs Net summary - MBE",               match: [gross, net before],
+     select: {lob: PRTOT, level: LoB, basis: MBE, branch: UK branch}}
+  - {id: gvn_DCTOT, kind: ladder, slide: "Discontinued Lines (DCTOT) - Gross vs Net summary - MBE",     match: [gross, net before],
+     select: {lob: DCTOT, level: Aggregate, basis: MBE, branch: UK branch}}
+  - {id: gvn_ALL,   kind: ladder, slide: "Total Net - Gross vs Net summary - MBE",                      match: [gross, net before],
+     select: {lob: ALL, level: All, basis: MBE, branch: UK branch}}
+
+  - id: ibnr_alloc_totals
+    kind: overview
+    slide: "Earned IBNR allocation"
+    match: [uwy, gep]
+    blocks:
+      - {header: [UWY, GEP], occurrence: 2}
+  - id: ibnr_alloc_by_class
+    kind: overview
+    slide: "Earned IBNR allocation"
+    match: [gross earned statutory, energy]
+    blocks:
+      - {title: "Gross Earned Statutory", below: UWY, occurrence: 2}
+      - {title: "Net Earned Statutory", below: UWY, occurrence: 2}
+  - id: ibnr_qoq_by_class
+    kind: overview
+    slide: "QoQ movements Earned Statutory IBNR gross and net"
+    match: [qoq movement gross]
+    blocks:
+      - {title: "QoQ Movement Gross", below: UWY, occurrence: 2}
+      - {title: "QoQ Movement Net", below: UWY, occurrence: 2}

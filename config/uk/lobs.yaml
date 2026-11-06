@@ -1,0 +1,14 @@
+# UK branch LoBs. `code` is what the deck titles use; the selector is the UK summary sheet.
+# Patterns / Expert Judgement are group level: resclass and ej_first_row are the same as in the main deck.
+# The UK deck titles Energy Downstream "(ENDMW)" (typo): mapped through `aliases` with a warning.
+
+lobs:
+  - {selector: Summary_ALL_UK,   code: ALL,   resclass: "",      ej_first_row: null}
+  - {selector: Summary_ENTOT_UK, code: ENTOT, resclass: "",      ej_first_row: null}
+  - {selector: Summary_PRTOT_UK, code: PRTOT, resclass: PRTOT,   ej_first_row: 45}
+  - {selector: Summary_DCTOT_UK, code: DCTOT, resclass: "",      ej_first_row: null}
+  - {selector: Summary_ENUPS_UK, code: ENUPS, resclass: ENUPS,   ej_first_row: 5}
+  - {selector: Summary_ENDWM_UK, code: ENDWM, resclass: ENDWM,   ej_first_row: 15, aliases: [ENDMW]}
+  - {selector: Summary_ENCON_UK, code: ENCON, resclass: ENCON,   ej_first_row: 25}
+  - {selector: Summary_DCMAR_UK, code: DCMAR, resclass: DCMAR,   ej_first_row: 95}
+  - {selector: Summary_DCFIL_UK, code: DCFIL, resclass: DCFIL,   ej_first_row: 135}

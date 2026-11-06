@@ -1,0 +1,52 @@
+# NOTE: the boolean flags below are LEGACY and informational. The deck decides what is produced
+# (see slides.yaml / `resco scan`). The tool relies on: selector, resclass (also the key of the Expert Judgement block,
+# which is FOUND BY THIS CODE in the workbook). ej_first_row is documentation only since 2026-10-21.
+#
+# Source: 'PrintPNGs' control sheet of Print tables.xlsm (rows 8-29), as saved for the Q2 run
+# (workbook ABE&MBE_202606_v2.9b, max year 2026). Status: DRAFT. The control sheet is NOT yet confirmed
+# to be current for Q3; mismatches versus the Q2 deck are listed under `mismatch`.
+#
+# selector     = value written to ResCo tables_new!B1
+# resclass     = sheet holding the pattern charts / key into ExpertJudgement (blank for totals)
+# table / triangles / profit / charts_triangles / patterns / exp_judgement = legacy flags
+# ej_first_row = first row of the LoB's block in ExpertJudgement (10-row blocks, header row 4)
+# single_slide = legacy scratch-deck behaviour only (Y = each image on its own scratch slide); irrelevant for in-place replacement
+
+lobs:
+  - {selector: Summary_ALL,   resclass: "",      table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: false, exp_judgement: false, ej_first_row: null, single_slide: Y}
+  - {selector: Summary_ENTOT, resclass: "",      table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: false, exp_judgement: false, ej_first_row: null, single_slide: Y}
+  - {selector: Summary_PRTOT, resclass: PRTOT,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 45,   single_slide: N}
+  - {selector: Summary_LITOT, resclass: "",      table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: false, exp_judgement: false, ej_first_row: null, single_slide: Y}
+  - {selector: Summary_DCTOT, resclass: "",      table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: false, exp_judgement: false, ej_first_row: null, single_slide: N}
+  - {selector: Summary_ENUPS, resclass: ENUPS,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 5,    single_slide: N}
+  - {selector: Summary_ENDWM, resclass: ENDWM,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 15,   single_slide: N}
+  - {selector: Summary_ENCON, resclass: ENCON,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 25,   single_slide: N}
+  - {selector: Summary_LIIND, resclass: LIIND,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 55,   single_slide: N}
+  - {selector: Summary_LISHT, resclass: LISHT,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 85,   single_slide: N}
+  - {selector: Summary_LIMED, resclass: LIMED,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 65,   single_slide: N}
+  - {selector: Summary_LIMLT, resclass: LIMLT,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 75,   single_slide: N}
+  - {selector: Summary_DCFIL, resclass: DCFIL,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true, ej_first_row: 135,  single_slide: N}
+  - {selector: Summary_DCMAR, resclass: DCMAR,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true, ej_first_row: 95,   single_slide: N}
+  - {selector: Summary_DCBON, resclass: DCBON,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 125,  single_slide: N}
+  - {selector: Summary_DCFRO, resclass: DCFRO,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 165,  single_slide: N}
+  - {selector: Summary_DCPRO, resclass: DCPRO,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 115,  single_slide: N}
+  - {selector: Summary_DCENR, resclass: DCENR,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 105,  single_slide: N}
+  - {selector: Summary_DCSPE, resclass: DCSPE,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 145,  single_slide: N}
+  - {selector: Summary_DCLIA, resclass: DCLIA,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 155,  single_slide: N}
+  - {selector: Summary_DBTOT, resclass: "",      table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: false, exp_judgement: false, ej_first_row: null, single_slide: N}
+  - {selector: Summary_DBENR, resclass: DBENR,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: 175,  single_slide: N}
+  - {selector: Summary_DBLIF, resclass: DBLIF,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: null,  single_slide: N}
+  - {selector: Summary_DBPRO, resclass: DBPRO,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: null, single_slide: N}
+  - {selector: Summary_DBTRT, resclass: DBTRT,   table: true, triangles: true,  profit: true,  charts_triangles: true,  patterns: true,  exp_judgement: true,  ej_first_row: null, single_slide: N}
+# DBTOT (Dubai total), DBPRO and DBTRT were added 2026-10-22: Summary_<CODE> sheets, ResClass sheets and Expert Judgement blocks exist in v2.13b.
+# The Q3 template v1 has DBTOT slides (an empty Results slide: its pictures are inserted by the build) and no DBPRO / DBTRT slide yet.
+
+# Mismatches between the legacy (Q2) control sheet and the deck (ReservingPresentation_202609.pptx), and how they were resolved.
+# The deck is the source of truth for which slides exist.
+mismatch:
+  - "DCFIL, DCMAR: legacy flags said no triangles/patterns/EJ, but the deck has them. Flags corrected to true here."
+  - "DBENR, DBLIF: deck only has a Results slide with the table image (no P&L image). Nothing else is written for them."
+  - "DBLIF: no ExpertJudgement block exists in v2.13 (row 185 is past the end of the sheet): ej_first_row set to null. The scan raises an ERROR if a deck ever gets a DBLIF EJ slide."
+  - "DCFRO, DCPRO, DCENR, DCSPE, DCLIA: in the legacy control sheet, no slides in the deck (reported as info by the scan)."
+  - "ENOTH: has an ExpertJudgement block (rows 35-44) but is in neither the control sheet nor the deck."
+  - "Pattern charts: legacy found them by name (missing/duplicated in v2.13); the tool finds them by title, duplicates ignored (confirmed 2026-10-20)."

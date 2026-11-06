@@ -1,0 +1,52 @@
+# Native tables on narrative slides that are filled from Excel (text only: the table keeps the deck's styling).
+#   slide:  title of the slide (dashes and case are ignored)
+#   match:  words that must appear in the first two rows of the table (picks the right table when a slide has several)
+#   kind ladder   -> rows of the netting workbook 'Ladder' sheet; `select` = LoB / level / basis / branch
+#   kind overview -> blocks of the IBNR allocation workbook 'Overview' sheet, one block per UWY column group of the table
+#                    (left to right), located by title text: `occurrence` 1 = the Lux block, 2 = the UK block further right
+# Rows are matched by UWY label, columns by header text. Anything unmatched is reported, never guessed.
+
+sources:
+  netting: {sheet: Ladder}
+  ibnr: {sheet: Overview}
+
+targets:
+  # ---------------------------------------------------------------- Gross vs Net summary (netting workbook)
+  - {id: gvn_ENTOT, kind: ladder, slide: "Energy (ENTOT) - Gross vs Net summary - MBE",                 match: [gross, net before],
+     select: {lob: ENTOT, level: Aggregate, basis: MBE, branch: Total}}
+  - {id: gvn_LITOT, kind: ladder, slide: "Life (LITOT) - Gross vs Net summary - MBE",                   match: [gross, net before],
+     select: {lob: LITOT, level: Aggregate, basis: MBE, branch: Total}}
+  - {id: gvn_PRTOT, kind: ladder, slide: "Property (PRTOT) - Gross vs Net summary - MBE",               match: [gross, net before],
+     select: {lob: PRTOT, level: LoB, basis: MBE, branch: Total}}
+  - {id: gvn_DCTOT, kind: ladder, slide: "Discontinued Lines (DCTOT) - Gross vs Net summary - MBE",     match: [gross, net before],
+     select: {lob: DCTOT, level: Aggregate, basis: MBE, branch: Total}}
+  - {id: gvn_DBTOT, kind: ladder, slide: "Dubai (DBTOT) - Gross vs Net summary - MBE",               match: [gross, net before],
+     select: {lob: DBTOT, level: Aggregate, basis: MBE, branch: Total}}
+  - {id: gvn_DBPRO, kind: ladder, slide: "Dubai Property (DBPRO) - Gross vs Net summary - MBE",         match: [gross, net before],
+     select: {lob: DBPRO, level: LoB, basis: MBE, branch: Total}}
+  - {id: gvn_DBTRT, kind: ladder, slide: "Dubai Treaty (DBTRT) - Gross vs Net summary - MBE",           match: [gross, net before],
+     select: {lob: DBTRT, level: LoB, basis: MBE, branch: Total}}
+  - {id: gvn_ALL,   kind: ladder, slide: "Total Net - Gross vs Net summary - MBE",                      match: [gross, net before],
+     select: {lob: ALL, level: All, basis: MBE, branch: Total}}
+
+  # ---------------------------------------------------------------- Earned IBNR allocation (IBNR allocation workbook)
+  - id: ibnr_alloc_totals
+    kind: overview
+    slide: "Earned IBNR allocation"
+    match: [uwy, gep]
+    blocks:
+      - {header: [UWY, GEP], occurrence: 1}
+  - id: ibnr_alloc_by_class
+    kind: overview
+    slide: "Earned IBNR allocation"
+    match: [gross earned statutory, energy]
+    blocks:
+      - {title: "Gross Earned Statutory", below: UWY, occurrence: 1}
+      - {title: "Net Earned Statutory", below: UWY, occurrence: 1}
+  - id: ibnr_qoq_by_class
+    kind: overview
+    slide: "QoQ movements Earned Statutory IBNR gross and net"
+    match: [qoq movement gross]
+    blocks:
+      - {title: "QoQ Movement Gross", below: UWY, occurrence: 1}
+      - {title: "QoQ Movement Net", below: UWY, occurrence: 1}

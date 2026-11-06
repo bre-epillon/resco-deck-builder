@@ -1,0 +1,53 @@
+# Source: legacy/Module1.bas (Button1_Click = export, Button2_Click = paste into scratch deck).
+# What to READ from the workbook. Where each image goes on a slide (geometry) is in slot_kinds.yaml.
+# Chart names are cross-checked against ABE&MBE_202609_v2.13.xlsm (see output/dump_*/charts.csv).
+
+selector:
+  sheet: "ResCo tables_new"
+  cell: B1                      # value = Summary_<CODE> sheet name; recalc after each change
+  check_cell: C5                # LoB code shown on the sheet (validation 2 in CLAUDE.md)
+
+resco_sheet_items:
+  table:
+    range: "C4:S30"
+    range_life: "C4:S17"        # used for Life classes (see life_resclasses and the note below)
+  profit:
+    range: "Y24:AA27"
+  triangles:
+    range: "C36:W90"
+  charts_triangles:             # ChartObjects on 'ResCo tables_new', exported as PNG
+    - {chart: "Chart 8",  title: "GPrmB Pattern", file: ChartPrem,   kind: chart_prem}
+    - {chart: "Chart 9",  title: "GClmP Pattern", file: ChartPaid,   kind: chart_paid}
+    - {chart: "Chart 10", title: "GClmI Pattern", file: ChartIncurr, kind: chart_incurr}
+
+# Pattern charts live on the per-ResClass sheet (sheet name = ResClass code, e.g. 'ENUPS').
+# The legacy macro found them by NAME ('Premiums'/'Incurred'); that fails in v2.13 on many sheets, so the new
+# tool finds them by TITLE. Duplicates (stacked copies at the same position) are ignored: topmost one wins.
+charts_patterns:
+  sheet_per: resclass
+  charts:
+    - {chart: "Premiums", title: "Premiums Booked", file: PremiumsBookedGraph, kind: pattern_prem}
+    - {chart: "Incurred", title: "Attritional Claims Paid vs. Incurred", file: IncurredGraph, kind: pattern_inc}
+
+# Expert judgement: copied as VALUES from sheet 'ExpertJudgement' (hidden) into a formatted scratch sheet
+# ('Exp_judgement' in Print tables.xlsm) and that sheet is exported as one image.
+# n_rows = max_year - 2016 (10 rows for 2026): rows first_row .. first_row + max_year - 2017.
+expert_judgement:
+  source_sheet: ExpertJudgement
+  blocks:                       # source columns -> destination top-left on Exp_judgement
+    - {name: Premiums,                  src_cols: "E:O",   dest: B4}
+    - {name: Attritional claims,        src_cols: "Q:X",   dest: B17}
+    - {name: Attritional claims (cont), src_cols: "Y:Z",   dest: K17}
+    - {name: Large loss IBNR,           src_cols: "AB:AL", dest: B30}
+  scratch_sheet: Exp_judgement
+  clear_before: ["B4:L13", "B17:L26", "B30:L39"]
+  print_range: "A1:M40"
+  print_range_life: "A1:M26"    # Life classes have no Large-loss block
+
+notes:
+  - "Legacy ExportRangeAsPNG uses CopyPicture(xlScreen) -> temporary ChartObject -> Chart.Export. Output depends on screen/zoom."
+  - "Legacy sizes the picture to the slot width AND height (aspect ratio is not preserved); we do the same to match the deck."
+  - "Legacy 'life' range test compares ResClass (col B of control sheet). ResClass is blank for LITOT in the control sheet, so LITOT actually gets the full C4:S30 range; the deck (slides 18, 69) matches that. Keep this behaviour unless told otherwise."
+
+# ResClass values that use the shorter table / EJ ranges (legacy hard-coded list).
+life_resclasses: [LIIND, LISHT, LIMED, LIMLT, LITOT]

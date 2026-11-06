@@ -1,0 +1,45 @@
+# UK branch deck: what to read from 'ResCo tables UK New'. Ranges inferred by matching the Q2 UK deck images with
+# the sheet (no legacy macro exists for the UK deck): ASSUMPTIONS to be confirmed, see the final report.
+
+selector:
+  sheet: "ResCo tables UK New"
+  cell: B1                      # value = Summary_<CODE>_UK
+  check_cell: C5                # shows e.g. ENUPS_UK
+  # Rows that are empty or not yet relevant for the UK branch (UWY <=2017/2018/2019 detail rows, spare UWY rows).
+  # The Q2 UK images do not show them; they are visible in the saved workbook, so they are hidden IN MEMORY before export.
+  hide_rows: ["6:8", "14:14", "17:18", "24:25"]
+
+resco_sheet_items:
+  table:
+    range: "C4:S26"
+    range_life: "C4:S26"        # unused (no Life classes in the UK deck)
+  profit:
+    range: "AK36:AM39"
+  triangles:
+    range: "C32:W67"
+  charts_triangles:
+    - {chart: "Chart 4", title: "GPrmB Pattern", file: ChartPrem,   kind: chart_prem}
+    - {chart: "Chart 5", title: "GClmP Pattern", file: ChartPaid,   kind: chart_paid}
+    - {chart: "Chart 6", title: "GClmI Pattern", file: ChartIncurr, kind: chart_incurr}
+
+# Patterns and Expert Judgement in the UK deck are the group-level ones (same charts / same ExpertJudgement sheet).
+charts_patterns:
+  sheet_per: resclass
+  charts:
+    - {chart: "Premiums", title: "Premiums Booked", file: PremiumsBookedGraph, kind: pattern_prem}
+    - {chart: "Incurred", title: "Attritional Claims Paid vs. Incurred", file: IncurredGraph, kind: pattern_inc}
+
+expert_judgement:
+  source_sheet: ExpertJudgement
+  max_year: 2023                # the UK branch only has UWY up to 2023 (Q2 UK Expert Judgement image has 7 rows)
+  blocks:
+    - {name: Premiums,                  src_cols: "E:O",   dest: B4}
+    - {name: Attritional claims,        src_cols: "Q:X",   dest: B17}
+    - {name: Attritional claims (cont), src_cols: "Y:Z",   dest: K17}
+    - {name: Large loss IBNR,           src_cols: "AB:AL", dest: B30}
+  scratch_sheet: Exp_judgement
+  clear_before: ["B4:L13", "B17:L26", "B30:L39"]
+  print_range: "A1:M40"
+  print_range_life: "A1:M26"
+
+life_resclasses: []

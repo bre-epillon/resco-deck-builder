@@ -1,0 +1,39 @@
+# UK branch deck (ReservingPresentation_<q>_UK.pptx). Geometry read from the Q2 UK deck (points).
+# Differs from the main deck for the table, P&L box and triangles; charts, patterns and EJ share the main geometry.
+# There are no Life classes in the UK deck, hence no *_life kinds.
+
+tolerance_pt: 4
+
+kinds:
+  table:         {geometry: [95, 150, 720, 216],     source: "ResCo tables UK New C4:S26 (empty rows hidden in memory)"}
+  profit:        {geometry: [693, 390, 122.4, 51.7], source: "ResCo tables UK New AK36:AM39"}
+  triangles:     {geometry: [35, 118, 626.4, 309.6], source: "ResCo tables UK New C32:W67"}
+  chart_prem:    {geometry: [670, 100, 273.6, 108],  source: "ResCo tables UK New chart 'Chart 4' (GPrmB Pattern)"}
+  chart_paid:    {geometry: [670, 220, 273.6, 108],  source: "ResCo tables UK New chart 'Chart 5' (GClmP Pattern)"}
+  chart_incurr:  {geometry: [670, 340, 273.6, 108],  source: "ResCo tables UK New chart 'Chart 6' (GClmI Pattern)"}
+  pattern_prem:  {geometry: [40, 100, 432, 324],     source: "<ResClass> sheet (group level), chart titled 'Premiums Booked'"}
+  pattern_inc:   {geometry: [500, 100, 432, 324],    source: "<ResClass> sheet (group level), chart titled 'Attritional Claims Paid vs. Incurred'"}
+  ej:            {geometry: [150, 80, 648, 424.8],   source: "ExpertJudgement block, UWY up to max_year (UK: 2023), 3 tables"}
+
+logos:
+  - [925, 16, 65, 56]
+  - [897, 33, 60, 52]
+
+slide_types:
+  Results:           {required: [[table], [profit]]}
+  Triangles:         {required: [[triangles], [chart_prem], [chart_paid], [chart_incurr]]}
+  Patterns:          {required: [[pattern_prem], [pattern_inc]]}
+  "Expert Judgement": {required: [[ej]]}
+
+kind_type:
+  table: Results
+  profit: Results
+  triangles: Triangles
+  chart_prem: Triangles
+  chart_paid: Triangles
+  chart_incurr: Triangles
+  pattern_prem: Patterns
+  pattern_inc: Patterns
+  ej: "Expert Judgement"
+
+total_code: ALL

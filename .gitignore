@@ -1,0 +1,31 @@
+# Run outputs and quarterly inputs (generated or confidential, large)
+output/
+Inputs/
+
+# Office files, except the render template the code needs
+*.xls
+*.xlsx
+*.xlsm
+*.xlsb
+*.ppt
+*.pptx
+*.pdf
+!assets/*.xlsx
+~$*
+
+# Local settings (paths of the quarter's pack folder)
+local.cmd
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

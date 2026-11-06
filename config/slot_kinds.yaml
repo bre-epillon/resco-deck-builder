@@ -1,0 +1,50 @@
+# Picture slots on LoB slides. Geometry in points (1 pt = 12700 EMU), from legacy/Module1.bas Button2_Click and
+# confirmed against the Q2 deck. The scanner classifies every picture on a LoB slide by matching its
+# position AND size to one of these kinds (never by shape name: content images are often called "Picture 4",
+# exactly like the logo).
+# `source` documents what feeds the slot (the exporter in Step 4 maps kind -> export action).
+
+tolerance_pt: 4
+
+kinds:
+  table:         {geometry: [95, 100, 720, 288],  source: "ResCo tables_new C4:S30"}
+  table_life:    {geometry: [95, 150, 720, 173],  source: "ResCo tables_new C4:S17 (Life classes)"}
+  profit:        {geometry: [693, 400, 122, 50],  source: "ResCo tables_new Y24:AA27"}
+  triangles:     {geometry: [20, 100, 634, 382],  source: "ResCo tables_new C36:W90"}
+  chart_prem:    {geometry: [670, 100, 274, 108], source: "ResCo tables_new chart 'Chart 8'"}
+  chart_paid:    {geometry: [670, 220, 274, 108], source: "ResCo tables_new chart 'Chart 9'"}
+  chart_incurr:  {geometry: [670, 340, 274, 108], source: "ResCo tables_new chart 'Chart 10'"}
+  pattern_prem:  {geometry: [40, 100, 432, 324],  source: "<ResClass> sheet, chart titled 'Premiums Booked'"}
+  pattern_inc:   {geometry: [500, 100, 432, 324], source: "<ResClass> sheet, chart titled 'Attritional Claims Paid vs. Incurred'"}
+  ej:            {geometry: [150, 80, 648, 425],  source: "ExpertJudgement block, 3 tables (scratch sheet render)"}
+  ej_life:       {geometry: [150, 115, 648, 317], source: "ExpertJudgement block, 2 tables (Life classes)"}
+
+# Logo positions to ignore (the logo is a picture too). Matched by geometry only.
+logos:
+  - [925, 16, 65, 56]
+  - [897, 33, 60, 52]
+
+# Slide types (the last word(s) of a LoB slide title) and the slot groups each is expected to carry.
+# A group is a list of alternative kinds. Missing groups are reported as INFO (decks legitimately differ).
+slide_types:
+  Results:           {required: [[table, table_life], [profit]]}
+  Triangles:         {required: [[triangles], [chart_prem], [chart_paid], [chart_incurr]]}
+  Patterns:          {required: [[pattern_prem], [pattern_inc]]}
+  "Expert Judgement": {required: [[ej, ej_life]]}
+
+# Which slide type a recognised kind belongs to (used to cross-check the title against the content).
+kind_type:
+  table: Results
+  table_life: Results
+  profit: Results
+  triangles: Triangles
+  chart_prem: Triangles
+  chart_paid: Triangles
+  chart_incurr: Triangles
+  pattern_prem: Patterns
+  pattern_inc: Patterns
+  ej: "Expert Judgement"
+  ej_life: "Expert Judgement"
+
+# Slide titles of the form "Total <Type>" (no LoB code) use this selector code.
+total_code: ALL

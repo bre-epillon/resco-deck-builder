@@ -1,0 +1,20 @@
+# Slides the build adds when the template has no slide with that title (matched ignoring dashes and case).
+# Each new slide is a COPY of a model slide of the template, retitled, placed after another slide; the template file is never changed.
+#   copy: frame -> title, logo and slide number only: the build inserts the pictures the model slide had (e.g. the Results table) at their
+#                  standard positions, so a failed export leaves the slide empty rather than showing another LoB's figures
+#   copy: full  -> a complete copy (native table, legend pictures, disclaimer): the table is filled from Excel (config/tables.yaml)
+#   like:  titles of model slides, the first one found is used
+#   after: title (or a list of titles: the first one found counts) of the slide it follows; the end of the deck when none is found
+#   lob / part: a run limited to other LoBs or to other content (--lobs / --parts) does not add it; --slides never adds slides
+# Dubai Property and Dubai Treaty reserving classes: Results like Dubai Energy (table only), followed by their Gross vs Net summary.
+
+add:
+  - {id: dbpro_results, lob: DBPRO, part: results, copy: frame, title: "Dubai Property (DBPRO) - Results",
+     like: ["Dubai Energy (DBENR) - Results"], after: "Dubai Life (DBLIF) - Results"}
+  - {id: dbpro_netting, lob: DBPRO, part: netting, copy: full, title: "Dubai Property (DBPRO) - Gross vs Net summary - MBE",
+     like: ["Dubai (DBTOT) - Gross vs Net summary - MBE", "Discontinued Lines (DCTOT) - Gross vs Net summary - MBE"], after: "Dubai Property (DBPRO) - Results"}
+  - {id: dbtrt_results, lob: DBTRT, part: results, copy: frame, title: "Dubai Treaty (DBTRT) - Results",
+     like: ["Dubai Energy (DBENR) - Results"],
+     after: ["Dubai Property (DBPRO) - Gross vs Net summary - MBE", "Dubai Property (DBPRO) - Results", "Dubai Life (DBLIF) - Results"]}
+  - {id: dbtrt_netting, lob: DBTRT, part: netting, copy: full, title: "Dubai Treaty (DBTRT) - Gross vs Net summary - MBE",
+     like: ["Dubai (DBTOT) - Gross vs Net summary - MBE", "Discontinued Lines (DCTOT) - Gross vs Net summary - MBE"], after: "Dubai Treaty (DBTRT) - Results"}
