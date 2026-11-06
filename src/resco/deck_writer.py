@@ -56,6 +56,8 @@ class TableJob:
 def apply_table_jobs(prs, table_jobs: list[TableJob]) -> None:
     """Fill the tables of an already loaded presentation; errors are recorded on the job, never raised."""
     for tj in table_jobs:
+        if tj.error:  # already known why it cannot be filled (no source file, no rows): keep that reason
+            continue
         try:
             if not 1 <= tj.slide <= len(prs.slides):
                 raise DeckWriteError(f"slide {tj.slide} does not exist in the template")

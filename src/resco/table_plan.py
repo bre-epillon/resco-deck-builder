@@ -44,7 +44,8 @@ class TableSources:
     info: dict[str, str] = field(default_factory=dict)
 
 
-NO_PRIOR = "no Q-1 netting file was given (--netting-prior): the Profit (loss) movement QoQ boxes are left as they are"
+NO_PRIOR = ("no Q-1 netting file was given (dashboard field 'Netting Q-1', or --netting-prior): the Profit (loss) movement QoQ boxes "
+            "are left as they are")
 
 
 def load_sources(

@@ -128,6 +128,17 @@ Q comes from the netting file (`--netting`), Q-1 from a second file in the same 
 dashboard, `--netting-prior` in a terminal. For the UK deck that is the Q-1 UK figures **as presented** in the last UK
 deck (policies moved between UK and Lux since then), with premium and claims ultimate amounts, not only the ratios.
 
+**Which Q-1 file.** Name it `Q-1_netting_UK_<quarter>….xlsx` and put it in `Inputs/` (or the quarter's
+`02_ABE&MBE_Proposals`): when the UK deck is selected, the dashboard fills **Netting Q-1** with the newest such file.
+
+- Q3 2026: `Inputs/Q-1_netting_UK_2026Q2_as_presented.xlsx`, copied from sheet `ResultsUK_Q` of
+  `202606/02_ABE&MBE_Proposals/NettingTool_v0.22_2026Q2_manual correction DBLIF_UK.xlsm` (it reproduces every figure of
+  the Q2 UK deck's Gross vs Net tables).
+- From Q4 2026: the netting tool's *all combinations* export used for the Q3 UK deck, saved as
+  `Inputs/Q-1_netting_UK_2026Q3.xlsx`.
+
+If the field is empty the build skips the boxes and says so in the run report ("no Q-1 netting file was given").
+
 - The first build **inserts** the two boxes, right-aligned under each block's QoQ column, the header in the colour of the
   block's band. From then on they are part of the template: they are found by their title and only the figure is updated.
 - They belong to the `netting` content type, so a netting-only run (no Excel, seconds) refreshes them with the tables.

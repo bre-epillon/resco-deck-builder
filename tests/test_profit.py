@@ -118,6 +118,13 @@ def test_sources_jobs_and_report(tmp_path: Path):
     jobs = make_jobs([match], load_sources([match], TableConfig(), cur_path, None, None, None))
     entries, issues, filled = report(jobs, [match])
     assert jobs[0].warn_only and entries[0]["status"].startswith("skipped") and [i.level for i in issues] == ["WARN"] and filled == {}
+    # writing the deck keeps that reason (it used to be overwritten by "no ladder rows for this LoB")
+    deck = gvn_deck(tmp_path)
+    anchor_id = job_for(deck, Ladder(cur_path), None).shape_id
+    m2 = TableMatch(target, 1, TITLE, anchor_id, "Table", 6, 19)
+    jobs2 = make_jobs([m2], load_sources([m2], TableConfig(), cur_path, None, None, None))
+    write_deck(deck, tmp_path / "out.pptx", [], jobs2)
+    assert "Netting Q-1" in jobs2[0].error and find_boxes(Presentation(str(tmp_path / "out.pptx")).slides[0]) == []
     # with it, both quarters are read
     src = load_sources([match], TableConfig(), cur_path, None, None, cur_path)
     assert src.prior is not None and src.info["netting_prior"] == cur_path.name

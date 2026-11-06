@@ -212,7 +212,8 @@ def _cmd_serve(args: argparse.Namespace) -> int:
         "workbook": str(args.workbook) if args.workbook else newest("ABE*MBE*.xlsm", [*inputs, quarter / "02_ABE&MBE_Proposals"]),
         "template": str(args.template) if args.template else newest("ReservingPresentation*.pptx", deck_folders(), uk=False),
         "netting": newest("netting*.xlsx", [*inputs, quarter / "02_ABE&MBE_Proposals"]),
-        "netting_prior": "",  # chosen on purpose each quarter (UK deck: the Q-1 figures as presented)
+        # UK deck only: the Q-1 UK ladder as presented, named Q-1_netting_UK_<quarter>....xlsx (the main deck has no QoQ boxes)
+        "netting_prior_uk": newest("Q-1_netting*UK*.xlsx", [*inputs, quarter / "02_ABE&MBE_Proposals"]),
         "ibnr": newest("IBNR_Allocation*.xlsm", [*inputs, quarter / "03_FinanceAllocation"]),
         "uk_template": newest("ReservingPresentation*UK*.pptx", deck_folders(), uk=True),
     }
