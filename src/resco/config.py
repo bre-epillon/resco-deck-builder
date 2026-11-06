@@ -93,12 +93,16 @@ def load_deck_rules(config_dir: Path = DEFAULT_CONFIG_DIR) -> DeckRules:
     )
 
 
+LADDER_KINDS = ("ladder", "profit_qoq")  # table targets filled from the netting file, one LoB each
+
+
 @dataclass(frozen=True)
 class TableTarget:
-    """A native table on a narrative slide that is filled from Excel (see config/tables.yaml)."""
+    """A native table on a narrative slide that is filled from Excel (see config/tables.yaml). A profit_qoq target names
+    the Gross vs Net table (by `match`) under which its two 'Profit (loss) movement QoQ' boxes sit."""
 
     id: str
-    kind: str  # ladder | overview
+    kind: str  # ladder | overview | profit_qoq
     slide: str  # slide title
     match: tuple[str, ...]  # words that must appear in the first two rows of the table
     select: dict[str, str] = field(default_factory=dict)  # ladder: LoB / level / basis / branch

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from resco.config import TableConfig
+from resco.config import LADDER_KINDS, TableConfig
 from resco.deck_scan import TableMatch
 from resco.deck_writer import TableJob
 from resco.exporter import ExportIssue
@@ -37,15 +37,22 @@ def local_copy(path: Path, name: str) -> tuple[Path, str]:
 class TableSources:
     ladder: Ladder | None = None
     ladder_error: str | None = None
+    prior: Ladder | None = None  # the Q-1 netting ladder (Profit (loss) movement QoQ boxes)
+    prior_error: str | None = None
     overview: dict[str, tuple[list[BlockTexts | None], list[str]]] = field(default_factory=dict)
     ibnr_error: str | None = None
     info: dict[str, str] = field(default_factory=dict)
 
 
-def load_sources(matches: list[TableMatch], tcfg: TableConfig, netting_path: Path | None, ibnr_path: Path | None, xl: Any | None) -> TableSources:
+NO_PRIOR = "no Q-1 netting file was given (--netting-prior): the Profit (loss) movement QoQ boxes are left as they are"
+
+
+def load_sources(
+    matches: list[TableMatch], tcfg: TableConfig, netting_path: Path | None, ibnr_path: Path | None, xl: Any | None, netting_prior_path: Path | None = None,
+) -> TableSources:
     """`xl` is the open ExcelSession (needed for the IBNR workbook only)."""
     src = TableSources()
-    if any(m.target.kind == "ladder" for m in matches):
+    if any(m.target.kind in LADDER_KINDS for m in matches):
         if netting_path is None:
             src.ladder_error = "no netting workbook was given (--netting)"
         else:
@@ -54,6 +61,15 @@ def load_sources(matches: list[TableMatch], tcfg: TableConfig, netting_path: Pat
                 src.info["netting"] = netting_path.name
             except Exception as exc:  # noqa: BLE001 - a broken file must not stop the pictures
                 src.ladder_error = f"netting workbook could not be read: {exc}"
+    if any(m.target.kind == "profit_qoq" for m in matches):
+        if netting_prior_path is None:
+            src.prior_error = NO_PRIOR
+        else:
+            try:
+                src.prior = Ladder(netting_prior_path, tcfg.netting_sheet)
+                src.info["netting_prior"] = netting_prior_path.name
+            except Exception as exc:  # noqa: BLE001
+                src.prior_error = f"Q-1 netting file could not be read: {exc}"
     overview = [m for m in matches if m.target.kind == "overview"]
     if overview:
         if ibnr_path is None:
@@ -83,8 +99,23 @@ def make_jobs(matches: list[TableMatch], src: TableSources) -> list[TableJob]:
     jobs: list[TableJob] = []
     for m in matches:
         t = m.target
-        job = TableJob(m.slide, m.title, m.shape_id, t.id, t.kind)
-        if t.kind == "ladder":
+        job = TableJob(m.slide, m.title, m.shape_id, t.id, t.kind, lob=t.select.get("lob", ""))
+        if t.kind == "profit_qoq":
+            if src.ladder is None:
+                job.error = src.ladder_error or "no netting data"
+            elif src.prior is None:
+                job.error, job.warn_only = src.prior_error or NO_PRIOR, src.prior_error in (None, NO_PRIOR)
+            else:
+                try:
+                    job.block = src.ladder.block(t.select)
+                    job.ladder_groups = src.ladder.groups
+                except LadderError as exc:
+                    job.error = str(exc)
+                try:  # a LoB that is new this quarter has no Q-1 rows: the boxes are left empty and that is reported
+                    job.prior_block = src.prior.block(t.select)
+                except LadderError:
+                    job.prior_block = None
+        elif t.kind == "ladder":
             if src.ladder is None:
                 job.error = src.ladder_error or "no netting data"
             else:
@@ -109,6 +140,8 @@ def describe_source(m: TableMatch) -> str:
     t = m.target
     if t.kind == "ladder":
         return "netting ladder: " + ", ".join(f"{k}={v}" for k, v in t.select.items())
+    if t.kind == "profit_qoq":
+        return "Profit (loss) movement QoQ, netting ladder Q vs Q-1, Total row: " + ", ".join(f"{k}={v}" for k, v in t.select.items())
     return "IBNR 'Overview': " + "; ".join(str(b.get("title") or " ".join(b.get("header", []))) + f" #{b.get('occurrence', 1)}" for b in t.blocks)
 
 
@@ -130,8 +163,19 @@ def report(jobs: list[TableJob], matches: list[TableMatch], applied: bool = True
         entry: dict[str, Any] = {"id": j.target_id, "kind": j.kind, "slide": j.slide, "title": j.title, "table": m.table_name, "rows": m.rows, "cols": m.cols, "source": describe_source(m)}
         if j.error or res is None:
             msg = j.error or "the table was not filled"
-            entry["status"] = f"failed: {msg}"
-            issues.append(ExportIssue("ERROR", TABLES_LOB, kind, f"slide {j.slide}: {msg}"))
+            entry["status"] = f"skipped: {msg}" if j.warn_only else f"failed: {msg}"
+            issues.append(ExportIssue("WARN" if j.warn_only else "ERROR", TABLES_LOB, kind, f"slide {j.slide}: {msg}"))
+        elif j.kind == "profit_qoq":
+            entry.update(
+                status="filled" if applied else "checked", changed=len(res.changed), unchanged=res.unchanged, inserted=len(j.inserted_ids),
+                unmatched_rows=[], unmatched_cols=[], unused_source_rows=[], format_drift=0, notes=res.notes, grid=res.grid, overflow=[],
+            )  # fmt: skip
+            if j.box_ids:
+                filled.setdefault(j.slide, set()).update(j.box_ids)
+            if j.inserted_ids and applied:
+                issues.append(ExportIssue("INFO", TABLES_LOB, kind, f"slide {j.slide}: {len(j.inserted_ids)} Profit (loss) movement QoQ box(es) inserted under the Gross vs Net table (next quarter they are updated in place)"))
+            for n in res.notes:
+                issues.append(ExportIssue("WARN", TABLES_LOB, kind, f"slide {j.slide}: {n}"))
         else:
             entry.update(
                 status="filled" if applied else "checked", changed=len(res.changed), unchanged=res.unchanged, unmatched_rows=res.unmatched_rows,

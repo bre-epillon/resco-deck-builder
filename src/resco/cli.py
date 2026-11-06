@@ -188,6 +188,7 @@ def _cmd_build(args: argparse.Namespace) -> int:
         picture_mode=args.picture_mode,
         check=args.check,
         netting_path=args.netting,
+        netting_prior_path=args.netting_prior,
         ibnr_path=args.ibnr,
         parts_arg=args.parts,
         slides_arg=args.slides,
@@ -195,21 +196,24 @@ def _cmd_build(args: argparse.Namespace) -> int:
 
 
 def _cmd_serve(args: argparse.Namespace) -> int:
-    from resco.serve import PROJECT_ROOT, candidates, deck_folders, serve
+    from resco.serve import PROJECT_ROOT, candidates, deck_folders, pack_dir, serve
 
-    # the input files normally sit in Inputs/; decks are also looked for in the project folder and the one above it.
+    # the input files normally sit in Inputs/ or in the quarter's own folders (02_ABE&MBE_Proposals, 03_FinanceAllocation
+    # next to the reserving pack); decks in the project folder and the pack folder (see pack_dir: RESCO_PACK_DIR / local.cmd).
     # The NEWEST file wins (by modification time), so an updated template is picked up whichever folder it was saved in.
     inputs = [PROJECT_ROOT / "Inputs", PROJECT_ROOT]
+    quarter = pack_dir().parent
 
     def newest(pattern: str, where: list[Path], uk: bool | None = None) -> str:
-        found = candidates(pattern, where, uk)
+        found = candidates(pattern, [w for w in where if w.is_dir()], uk)
         return str(found[0]) if found else ""
 
     defaults = {
-        "workbook": str(args.workbook) if args.workbook else newest("ABE*MBE*.xlsm", inputs),
+        "workbook": str(args.workbook) if args.workbook else newest("ABE*MBE*.xlsm", [*inputs, quarter / "02_ABE&MBE_Proposals"]),
         "template": str(args.template) if args.template else newest("ReservingPresentation*.pptx", deck_folders(), uk=False),
-        "netting": newest("netting*.xlsx", [*inputs, PROJECT_ROOT.parent.parent / "02_ABE&MBE_Proposals"]),
-        "ibnr": newest("IBNR_Allocation*.xlsm", inputs),
+        "netting": newest("netting*.xlsx", [*inputs, quarter / "02_ABE&MBE_Proposals"]),
+        "netting_prior": "",  # chosen on purpose each quarter (UK deck: the Q-1 figures as presented)
+        "ibnr": newest("IBNR_Allocation*.xlsm", [*inputs, quarter / "03_FinanceAllocation"]),
         "uk_template": newest("ReservingPresentation*UK*.pptx", deck_folders(), uk=True),
     }
     return serve(args.out.resolve(), args.port, defaults, open_browser=not args.no_browser)
@@ -237,6 +241,7 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--ej-template", type=Path, help="formatted Expert Judgement render workbook (default: assets/)")
     b.add_argument("--picture-mode", choices=["auto", "clipboard", "pdf"], default="auto", help="how range pictures are made: auto = CopyPicture, PDF route if it fails")
     b.add_argument("--netting", type=Path, help="netting workbook (sheet 'Ladder'): fills the Gross vs Net summary tables")
+    b.add_argument("--netting-prior", type=Path, help="Q-1 netting workbook, same layout (UK deck: the figures as presented last quarter): fills the Profit (loss) movement QoQ boxes")
     b.add_argument("--ibnr", type=Path, help="IBNR allocation workbook (sheet 'Overview'): fills the Earned IBNR allocation / QoQ movement tables")
     b.add_argument("--check", action="store_true", help="check the workbook structure and the deck only: opens a copy of the workbook (about 40 s), exports nothing")
     b.add_argument("--dry-run", action="store_true", help="scan and print the plan only: no Excel, no deck written")

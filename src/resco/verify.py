@@ -18,6 +18,7 @@ class ShapeSnap:
     geometry: tuple[float, float, float, float] | None
     text: str
     image_sha: str | None
+    is_table: bool = False
 
 
 @dataclass(frozen=True)
@@ -44,11 +45,12 @@ def snapshot(path: Path) -> list[SlideSnap]:
         shapes = []
         for sh in slide.shapes:
             text = _clean(sh.text_frame.text) if getattr(sh, "has_text_frame", False) and sh.has_text_frame else ""
-            if getattr(sh, "has_table", False) and sh.has_table:
+            is_table = bool(getattr(sh, "has_table", False) and sh.has_table)
+            if is_table:
                 text = " \u00a6 ".join(_clean(c.text) for row in sh.table.rows for c in row.cells)
             blob = picture_blob(sh) if _is_picture(sh) else None
             sha = hashlib.sha256(blob).hexdigest() if blob is not None else ("no-embedded-image" if _is_picture(sh) else None)
-            shapes.append(ShapeSnap(sh.shape_id, sh.name, _geometry(sh), text, sha))
+            shapes.append(ShapeSnap(sh.shape_id, sh.name, _geometry(sh), text, sha, is_table))
         xml = hashlib.sha256(etree.tostring(slide._element, method="c14n")).hexdigest()
         snaps.append(SlideSnap(i, xml, tuple(shapes)))
     return snaps
@@ -64,32 +66,40 @@ def compare_prepared(original: list[SlideSnap], prepared: list[SlideSnap], added
     return []
 
 
-def compare(template: list[SlideSnap], built: list[SlideSnap], replaced: dict[int, set[int]], filled: dict[int, set[int]] | None = None, inserted: dict[int, int] | None = None) -> VerifyResult:
+def compare(
+    template: list[SlideSnap], built: list[SlideSnap], replaced: dict[int, set[int]], filled: dict[int, set[int]] | None = None, inserted: dict[int, int] | None = None,
+    inserted_tables: dict[int, int] | None = None,
+) -> VerifyResult:
     """`replaced` maps slide index -> picture shape ids the build was supposed to change; `filled` the same for tables whose text was filled;
-    `inserted` slide index -> number of pictures that were to be added to an empty slide."""
+    `inserted` slide index -> number of pictures that were to be added to an empty slide; `inserted_tables` the same for tables
+    (the Profit (loss) movement QoQ boxes)."""
     filled = filled or {}
     inserted = inserted or {}
+    inserted_tables = inserted_tables or {}
     res = VerifyResult()
     err = lambda m: res.messages.append(("ERROR", m))  # noqa: E731
     if len(template) != len(built):
         err(f"slide count changed: {len(template)} -> {len(built)}")
         return res
 
-    untouched_identical = replaced_ok = inserted_ok = 0
+    untouched_identical = replaced_ok = inserted_ok = tables_inserted_ok = 0
     for before, after in zip(template, built):
         i = before.index
         expected = replaced.get(i, set())
         tables = filled.get(i, set())
-        n_new = inserted.get(i, 0)
+        n_new, n_tab = inserted.get(i, 0), inserted_tables.get(i, 0)
         ids_before, ids_after = [s.shape_id for s in before.shapes], [s.shape_id for s in after.shapes]
-        if ids_after[: len(ids_before)] != ids_before or len(ids_after) != len(ids_before) + n_new:
-            err(f"slide {i}: shapes added, removed or reordered" + (f" (expected {n_new} new picture(s))" if n_new else ""))
+        if ids_after[: len(ids_before)] != ids_before or len(ids_after) != len(ids_before) + n_new + n_tab:
+            what = [f"{n_new} new picture(s)"] * bool(n_new) + [f"{n_tab} new table(s)"] * bool(n_tab)
+            err(f"slide {i}: shapes added, removed or reordered" + (f" (expected {' and '.join(what)})" if what else ""))
             continue
-        for extra in after.shapes[len(before.shapes):]:  # the pictures inserted into an empty slide
-            if extra.image_sha is None:
-                err(f"slide {i} shape {extra.shape_id}: an inserted shape is not a picture")
-            else:
-                inserted_ok += 1
+        extras = after.shapes[len(before.shapes):]  # pictures inserted into an empty slide, tables inserted under a Gross vs Net table
+        n_pics, n_tabs = sum(1 for e in extras if e.image_sha is not None), sum(1 for e in extras if e.is_table)
+        if (n_pics, n_tabs) != (n_new, n_tab):
+            err(f"slide {i}: inserted {n_pics} picture(s) and {n_tabs} table(s), expected {n_new} and {n_tab}")
+        else:
+            inserted_ok += n_pics
+            tables_inserted_ok += n_tabs
         for sb, sa in zip(before.shapes, after.shapes):
             where = f"slide {i} shape {sb.shape_id} '{sb.name}'"
             if (sb.name, sb.geometry) != (sa.name, sa.geometry) or (sb.text != sa.text and sb.shape_id not in tables):
@@ -100,17 +110,19 @@ def compare(template: list[SlideSnap], built: list[SlideSnap], replaced: dict[in
                 replaced_ok += 1
             elif sb.image_sha != sa.image_sha:
                 err(f"{where}: image changed but was not scheduled for replacement")
-        if not expected and not tables and not n_new:
+        if not expected and not tables and not n_new and not n_tab:
             if before.xml_sha != after.xml_sha:
                 err(f"slide {i}: untouched slide differs in its XML")
             else:
                 untouched_identical += 1
     res.stats = {
         "slides": len(template),
-        "touched_slides": len(set(replaced) | set(filled) | set(inserted)),
+        "touched_slides": len(set(replaced) | set(filled) | set(inserted) | set(inserted_tables)),
         "tables_filled": sum(len(v) for v in filled.values()),
         "untouched_slides_identical": untouched_identical,
         "pictures_replaced": replaced_ok,
         "pictures_inserted": inserted_ok,
     }
+    if inserted_tables:
+        res.stats["tables_inserted"] = tables_inserted_ok
     return res

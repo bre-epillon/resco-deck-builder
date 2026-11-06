@@ -16,7 +16,7 @@ from typing import Any
 from resco.compare import write_compare
 from resco.dashboard import render_dashboard
 from resco.runs import deck_of, summarize
-from resco.config import DEFAULT_CONFIG_DIR, load_deck_rules, load_lobs, load_ranges, load_slides_to_add, load_table_config
+from resco.config import DEFAULT_CONFIG_DIR, LADDER_KINDS, load_deck_rules, load_lobs, load_ranges, load_slides_to_add, load_table_config
 from resco.deck_scan import MappedSlide, TemplateLocked, build_map, copy_for_reading, scan_deck
 from resco.deck_writer import Job, apply_table_jobs, write_deck
 from resco.excel_reader import ExcelSession, SelectorError
@@ -76,7 +76,7 @@ def _target_in_scope(target_id: str | None, tcfg: Any, wanted: list[str], sel: S
     t = next((x for x in tcfg.targets if x.id == target_id), None)
     if t is None:
         return False
-    return t.select.get("lob", "").upper() in wanted if t.kind == "ladder" else not sel.lobs
+    return t.select.get("lob", "").upper() in wanted if t.kind in LADDER_KINDS else not sel.lobs
 
 
 def run_build(*args: Any, **kwargs: Any) -> int:
@@ -102,10 +102,12 @@ def _run_build(
     parts_arg: str | None = None,
     slides_arg: str | None = None,
     workdir: Path | None = None,
+    netting_prior_path: Path | None = None,
 ) -> int:
     t_start = time.time()
     workbook, template, out, ej_template = (p.resolve() for p in (workbook, template, out, ej_template))
     netting_path = netting_path.resolve() if netting_path else None
+    netting_prior_path = netting_prior_path.resolve() if netting_prior_path else None
     ibnr_path = ibnr_path.resolve() if ibnr_path else None
     tcfg = load_table_config(config_dir)
     rules, lobs, ranges = load_deck_rules(config_dir), load_lobs(config_dir), load_ranges(config_dir)
@@ -156,7 +158,7 @@ def _run_build(
     if sel.active and not plan and not table_matches:
         log.error("the selection (%s) matches nothing in the template", sel.describe())
         return 2
-    table_lobs = [c for c in dict.fromkeys(m.target.select.get("lob", "").upper() for m in table_matches if m.target.kind == "ladder") if c and c not in export_lobs]
+    table_lobs = [c for c in dict.fromkeys(m.target.select.get("lob", "").upper() for m in table_matches if m.target.kind in LADDER_KINDS) if c and c not in export_lobs]
     touched = export_lobs + table_lobs
     needs_excel = bool(export_lobs) or any(m.target.kind == "overview" for m in table_matches)  # netting-only runs never open Excel
     if sel.active:
@@ -256,7 +258,7 @@ def _run_build(
             if not check and ej_lobs:
                 needed = max([layout.ej[r].n_rows for r in ej_lobs if r in layout.ej] or [ej_capacity(ranges)])
                 ej_book = prepare_ej_template(xl, ej_template, ranges, needed)
-        sources = load_sources(table_matches, tcfg, netting_path, ibnr_path, xl)
+        sources = load_sources(table_matches, tcfg, netting_path, ibnr_path, xl, netting_prior_path)
         table_jobs = make_jobs(table_matches, sources)
         result["table_sources"] = sources.info
         if check:
@@ -381,7 +383,11 @@ def _run_build(
             inserted[j.slide] = inserted.get(j.slide, 0) + 1
         else:
             replaced.setdefault(j.slide, set()).add(j.shape_id)
-    ver = compare(snapshot(template), snapshot(built), replaced, filled, inserted) if (jobs or filled) else None
+    inserted_tables: dict[int, int] = {}
+    for tj in table_jobs:  # the Profit (loss) movement QoQ boxes added under a Gross vs Net table
+        if tj.inserted_ids and not tj.error:
+            inserted_tables[tj.slide] = inserted_tables.get(tj.slide, 0) + len(tj.inserted_ids)
+    ver = compare(snapshot(template), snapshot(built), replaced, filled, inserted, inserted_tables) if (jobs or filled or inserted_tables) else None
     if ver is not None and added.saved:  # the added slides must not have changed any original slide
         ver.messages += compare_prepared(snapshot(original_template), snapshot(template), added.added_positions)
         ver.stats["slides_added"] = added.added

@@ -15,6 +15,18 @@ targets:
   - {id: gvn_ALL,   kind: ladder, slide: "Total Net - Gross vs Net summary - MBE",                      match: [gross, net before],
      select: {lob: ALL, level: All, basis: MBE, branch: UK branch}}
 
+  # "Profit (loss) movement QoQ" boxes under the same tables (as on the main deck's Gross vs Net slides): Total row,
+  # (premium ultimate Q - Q-1) - (claims ultimate Q - Q-1), net before and net after internal QS. Q from the netting file,
+  # Q-1 from --netting-prior (the UK figures as presented last quarter). `match` names the Gross vs Net table they sit under.
+  - {id: pq_ENTOT, kind: profit_qoq, slide: "Energy (ENTOT) - Gross vs Net summary - MBE",              match: [gross, net before],
+     select: {lob: ENTOT, level: Aggregate, basis: MBE, branch: UK branch}}
+  - {id: pq_PRTOT, kind: profit_qoq, slide: "Property (PRTOT) - Gross vs Net summary - MBE",            match: [gross, net before],
+     select: {lob: PRTOT, level: LoB, basis: MBE, branch: UK branch}}
+  - {id: pq_DCTOT, kind: profit_qoq, slide: "Discontinued Lines (DCTOT) - Gross vs Net summary - MBE",  match: [gross, net before],
+     select: {lob: DCTOT, level: Aggregate, basis: MBE, branch: UK branch}}
+  - {id: pq_ALL,   kind: profit_qoq, slide: "Total Net - Gross vs Net summary - MBE",                   match: [gross, net before],
+     select: {lob: ALL, level: All, basis: MBE, branch: UK branch}}
+
   - id: ibnr_alloc_totals
     kind: overview
     slide: "Earned IBNR allocation"

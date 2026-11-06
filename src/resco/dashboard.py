@@ -285,6 +285,7 @@ _HOME = r"""<!doctype html>
  <div class="row"><label>Workbook <input type="text" id="r-wb" size="70"></label></div>
  <div class="row"><label>Template deck <input type="text" id="r-tpl" size="70"></label></div>
  <div class="row"><label>Netting workbook <input type="text" id="r-net" size="70" placeholder="optional: fills the Gross vs Net summary tables"></label></div>
+ <div class="row"><label>Netting Q-1 <input type="text" id="r-netq1" size="70" placeholder="optional: Q-1 ladder (UK: as presented), fills the Profit (loss) movement QoQ boxes"></label></div>
  <div class="row"><label>IBNR allocation <input type="text" id="r-ibnr" size="70" placeholder="optional: fills the Earned IBNR allocation and QoQ movement tables"></label></div>
  <div id="tpl-hint" class="hint err-text hide"></div>
  <div id="tpl-info" class="hint"></div>
@@ -371,14 +372,14 @@ async function loadRuns() { try { runs = (await (await fetch('/api/runs', {cache
   let saved = {}; try { saved = JSON.parse(localStorage.getItem('resco.form') || '{}'); } catch (e) {}
   const d0 = saved.deck || 'main'; document.querySelector(`input[name=deck][value=${d0}]`).checked = true;
   $('#r-lobs').value = ''; $('#r-wb').value = defaults.workbook || '';  // file paths are not remembered: the newest file found is always offered
-  $('#r-net').value = defaults.netting || ''; $('#r-ibnr').value = defaults.ibnr || '';
+  $('#r-net').value = defaults.netting || ''; $('#r-netq1').value = defaults.netting_prior || ''; $('#r-ibnr').value = defaults.ibnr || '';
   $('#r-tpl').value = (d0 === 'uk' ? defaults.uk_template : defaults.template) || ''; hint(); schedulePreview();
   document.querySelectorAll('input[name=deck]').forEach(r => r.addEventListener('change', () => { $('#r-tpl').value = (deckNow() === 'uk' ? defaults.uk_template : defaults.template) || $('#r-tpl').value; hint(); save(); resetSelection(); }));
-  ['r-lobs', 'r-wb', 'r-tpl', 'r-net', 'r-ibnr'].forEach(id => $('#' + id).addEventListener('input', () => { hint(); save(); }));
+  ['r-lobs', 'r-wb', 'r-tpl', 'r-net', 'r-netq1', 'r-ibnr'].forEach(id => $('#' + id).addEventListener('input', () => { hint(); save(); }));
   $('#r-tpl').addEventListener('input', resetSelection);
   const post = mode => async () => { $('#r-msg').className = 'hint'; $('#r-msg').textContent = 'starting…'; save();
     const pv = partsValue(); if (pv === null) { $('#r-msg').className = 'err-text'; $('#r-msg').textContent = 'Tick at least one content type.'; return; }
-    const body = {mode, deck: deckNow(), lobs: $('#r-lobs').value.trim(), parts: pv, slides: $('#r-slides').value.trim(), workbook: $('#r-wb').value.trim(), template: $('#r-tpl').value.trim(), netting: $('#r-net').value.trim(), ibnr: $('#r-ibnr').value.trim()};
+    const body = {mode, deck: deckNow(), lobs: $('#r-lobs').value.trim(), parts: pv, slides: $('#r-slides').value.trim(), workbook: $('#r-wb').value.trim(), template: $('#r-tpl').value.trim(), netting: $('#r-net').value.trim(), netting_prior: $('#r-netq1').value.trim(), ibnr: $('#r-ibnr').value.trim()};
     const r = await fetch('/api/run', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}); const j = await r.json();
     if (j.error) { $('#r-msg').className = 'err-text'; $('#r-msg').textContent = j.error; return; } watching = true; poll(); };
   $('#b-scan').onclick = post('scan'); $('#b-check').onclick = post('check'); $('#b-dry').onclick = post('dry-run'); $('#b-build').onclick = post('build');

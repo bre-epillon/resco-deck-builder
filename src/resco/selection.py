@@ -10,6 +10,7 @@ import re
 from dataclasses import dataclass, replace
 from typing import Any
 
+from resco.config import LADDER_KINDS
 from resco.deck_scan import DeckMap, MappedSlide, TableMatch
 
 # content types -> picture kinds (config/slot_kinds.yaml). The kind names themselves are accepted too (finer control).
@@ -20,7 +21,7 @@ GROUPS: dict[str, tuple[str, ...]] = {
     "ej": ("ej", "ej_life"),
 }
 # content types -> table target kinds (config/tables.yaml)
-TABLE_GROUPS: dict[str, str] = {"netting": "ladder", "ibnr": "overview"}
+TABLE_GROUPS: dict[str, tuple[str, ...]] = {"netting": LADDER_KINDS, "ibnr": ("overview",)}
 ALIASES: dict[str, str] = {
     "result": "results", "triangle": "triangles", "pattern": "patterns", "expert_judgement": "ej", "expertjudgement": "ej",
     "net": "netting", "gvn": "netting", "gross_vs_net": "netting", "netting_tables": "netting", "ladder": "netting", "ibnr_tables": "ibnr",
@@ -101,8 +102,8 @@ class Selection:
         return out
 
     def table_kinds(self) -> set[str] | None:
-        """Table target kinds allowed ('ladder' / 'overview'); None = all."""
-        return None if not self.parts else {TABLE_GROUPS[p] for p in self.parts if p in TABLE_GROUPS}
+        """Table target kinds allowed ('ladder' / 'profit_qoq' / 'overview'); None = all."""
+        return None if not self.parts else {k for p in self.parts if p in TABLE_GROUPS for k in TABLE_GROUPS[p]}
 
     def allows_slide(self, number: int) -> bool:
         return not self.slides or number in self.slides
@@ -135,7 +136,7 @@ class Selection:
         for m in matches:
             if not self.allows_slide(m.slide) or (kinds is not None and m.target.kind not in kinds):
                 continue
-            if m.target.kind == "ladder":
+            if m.target.kind in LADDER_KINDS:
                 if m.target.select.get("lob", "").upper() in wanted:
                     out.append(m)
             elif not self.lobs or (kinds is not None and "overview" in kinds):

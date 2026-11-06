@@ -1,0 +1,9 @@
+@rem Copy this file to local.cmd (git-ignored) and adjust it each quarter. Start dashboard.cmd reads it.
+@rem
+@rem RESCO_PACK_DIR: the quarter's reserving pack folder. The dashboard looks there for the template decks, and in the
+@rem quarter's 02_ABE&MBE_Proposals / 03_FinanceAllocation folders for the workbook, the netting file and the IBNR file.
+@rem Without it the folder above this one is used (as when the tool sat inside the pack folder).
+set RESCO_PACK_DIR=C:\Users\ErikPillon\Barents\Actuarial - Documents\General\Actuarial\Reserving\Reserve Calculation\2026\202609\06_ReservingPack
+
+@rem VENV_PY: the Python of the virtual environment (default below).
+@rem set VENV_PY=C:\Users\ErikPillon\venvs\resco\Scripts\python.exe

@@ -9,6 +9,7 @@ from pathlib import Path
 from pptx import Presentation
 
 from resco.deck_scan import EMU_PER_PT, _clean, _geometry, _is_picture, picture_blob
+from resco.profit import ProfitError, fill_profit
 from resco.tables import BlockTexts, FillResult, LadderBlock, fill_blocks, fill_ladder, norm_title
 
 _NS_A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
@@ -39,12 +40,17 @@ class TableJob:
     title: str
     shape_id: int
     target_id: str
-    kind: str  # ladder | overview
+    kind: str  # ladder | overview | profit_qoq (shape_id is then the Gross vs Net table the boxes sit under)
     block: LadderBlock | None = None
     ladder_groups: list[str] = field(default_factory=list)
     blocks: list[BlockTexts | None] = field(default_factory=list)
     result: FillResult | None = None
     error: str | None = None
+    prior_block: LadderBlock | None = None  # profit_qoq: the Q-1 figures
+    lob: str = ""
+    warn_only: bool = False  # the error is a missing optional input: reported as a warning
+    box_ids: list[int] = field(default_factory=list)  # profit_qoq: existing boxes that were filled
+    inserted_ids: list[int] = field(default_factory=list)  # profit_qoq: boxes added to the slide
 
 
 def apply_table_jobs(prs, table_jobs: list[TableJob]) -> None:
@@ -60,7 +66,15 @@ def apply_table_jobs(prs, table_jobs: list[TableJob]) -> None:
             if shape is None:
                 raise DeckWriteError(f"slide {tj.slide}: table with id {tj.shape_id} not found")
             geometry_before = _geometry(shape)
-            if tj.kind == "ladder":
+            if tj.kind == "profit_qoq":
+                if tj.block is None:
+                    raise DeckWriteError("no ladder rows for this LoB")
+                try:
+                    done = fill_profit(slide, shape, tj.block, tj.prior_block, tj.ladder_groups, tj.lob)
+                except ProfitError as exc:
+                    raise DeckWriteError(f"slide {tj.slide}: {exc}") from exc
+                tj.result, tj.box_ids, tj.inserted_ids = done.result, done.filled_ids, done.inserted_ids
+            elif tj.kind == "ladder":
                 if tj.block is None:
                     raise DeckWriteError("no ladder rows for this table")
                 tj.result = fill_ladder(shape.table, tj.block, tj.ladder_groups)

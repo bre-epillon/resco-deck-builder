@@ -116,6 +116,34 @@ dashboard form (or `--netting` / `--ibnr`); leave a field empty to skip that sou
 The UK deck uses the `UK branch` rows of the ladder and the UK blocks of `Overview` (further right on the sheet).
 Which slide, table and source rows is in `config/tables.yaml` (UK: `config/uk/tables.yaml`).
 
+### Profit (loss) movement QoQ boxes (UK deck)
+
+Under each UK "Gross vs Net summary - MBE" table the build puts the two small **Profit (loss) movement QoQ** tables that
+the main deck shows (slide 17 of the 202609 deck): one for Net before and one for Net after internal QS, "MBE / A+L", in
+millions, red for a loss and green for a profit. The figure is the netting workbook's `Summary_Tot` formula on the Total row:
+
+    (premium ultimate Q - premium ultimate Q-1) - (claims ultimate Q - claims ultimate Q-1)
+
+Q comes from the netting file (`--netting`), Q-1 from a second file in the same `Ladder` layout: **Netting Q-1** in the
+dashboard, `--netting-prior` in a terminal. For the UK deck that is the Q-1 UK figures **as presented** in the last UK
+deck (policies moved between UK and Lux since then), with premium and claims ultimate amounts, not only the ratios.
+
+- The first build **inserts** the two boxes, right-aligned under each block's QoQ column, the header in the colour of the
+  block's band. From then on they are part of the template: they are found by their title and only the figure is updated.
+- They belong to the `netting` content type, so a netting-only run (no Excel, seconds) refreshes them with the tables.
+- Without a Q-1 file the boxes are skipped with a warning; a LoB without Q-1 figures gets an empty grey box and a warning.
+- The verification allows exactly these inserted tables and nothing else on those slides.
+- Targets: `pq_*` in `config/uk/tables.yaml`. The main deck still has its pasted pictures; give it `profit_qoq` targets
+  (and delete the pictures once) to have them built as well.
+
+## Running it from this repository
+
+The tool no longer has to sit inside the quarter's `06_ReservingPack` folder. Copy `local.cmd.example` to `local.cmd`
+(git-ignored) and set `RESCO_PACK_DIR` to the quarter's pack folder; `Start dashboard.cmd` reads it. The dashboard then
+offers the newest template decks from that folder, the newest workbook and netting file from the quarter's
+`02_ABE&MBE_Proposals` and the newest IBNR file from `03_FinanceAllocation`. Without `local.cmd` the folder above the
+tool is used, as before. `output/`, `Inputs/` and all Office files are git-ignored.
+
 - Only the **text** of the existing table cells is replaced, so the slide keeps its styling and the table stays editable.
   Rows are matched by UWY label and columns by header text; anything without a match is left as it was and reported.
 - `Overview` blocks are found by their titles (not by row numbers) and read **as Excel displays them** (`+0.6`, `(0.1)`, `65%`).
@@ -168,6 +196,8 @@ left alone. Typos in a LoB code can be mapped with `aliases:` in `lobs.yaml`.
 | `Inputs/` | The workbooks (ABE&MBE, IBNR allocation, netting): the dashboard form is prefilled with the newest file found here |
 | `config/lobs.yaml`, `ranges_main.yaml`, `slot_kinds.yaml` | Main deck: LoBs, what to read from Excel, picture slots |
 | `src/resco/selection.py` | "Update only part of the deck": LoB / content type / slide filters (CLI, build and dashboard preview share it) |
+| `src/resco/profit.py` | The Profit (loss) movement QoQ boxes: figures from Q and Q-1 ladders, insert / update under a Gross vs Net table |
+| `local.cmd.example` | Template for `local.cmd`: the quarter's pack folder (`RESCO_PACK_DIR`) and the Python to use |
 | `config/uk/` | Same three files for the UK branch deck |
 | `assets/ej_render_template.xlsx` | Formatted sheet used to render the Expert Judgement picture |
 | `legacy/Module1.bas` | The original VBA, for reference |

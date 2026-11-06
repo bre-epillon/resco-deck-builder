@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import subprocess
 import sys
@@ -35,8 +36,15 @@ def candidates(pattern: str, where: list[Path], uk: bool | None = None) -> list[
     return sorted(found, key=lambda f: f.stat().st_mtime, reverse=True)
 
 
+def pack_dir() -> Path:
+    """The quarter's reserving pack folder (…/2026/202609/06_ReservingPack): RESCO_PACK_DIR when set (local.cmd), otherwise
+    the folder above the project, which is where the tool used to sit inside the pack."""
+    env = os.environ.get("RESCO_PACK_DIR", "").strip().strip('"')
+    return Path(env) if env else PROJECT_ROOT.parent
+
+
 def deck_folders() -> list[Path]:
-    return [PROJECT_ROOT / "Inputs", PROJECT_ROOT, PROJECT_ROOT.parent]
+    return [p for p in dict.fromkeys([PROJECT_ROOT / "Inputs", PROJECT_ROOT, pack_dir()]) if p.is_dir()]
 
 
 def config_for(deck: str) -> Path:
@@ -85,6 +93,8 @@ class JobRunner:
                 cmd += ["--slides", params["slides"]]
             if params.get("netting"):
                 cmd += ["--netting", params["netting"]]
+            if params.get("netting_prior"):
+                cmd += ["--netting-prior", params["netting_prior"]]
             if params.get("ibnr"):
                 cmd += ["--ibnr", params["ibnr"]]
             if mode == "dry-run":
@@ -120,7 +130,7 @@ class JobRunner:
             return f"The template file name does not say UK, but '{DECK_LABEL['uk']}' is selected. Choose the Lux deck, or pick the UK template."
         if p["mode"] != "scan" and (not Path(p.get("workbook", "")).is_file() or Path(p["workbook"]).suffix.lower() not in (".xlsm", ".xlsx")):
             return "workbook not found (.xlsm/.xlsx)"
-        for key, label in (("netting", "netting workbook"), ("ibnr", "IBNR allocation workbook")):
+        for key, label in (("netting", "netting workbook"), ("netting_prior", "Q-1 netting workbook"), ("ibnr", "IBNR allocation workbook")):
             value = p.get(key) or ""
             if value and (not Path(value).is_file() or Path(value).suffix.lower() not in (".xlsm", ".xlsx")):
                 return f"{label} not found (.xlsm/.xlsx)"
